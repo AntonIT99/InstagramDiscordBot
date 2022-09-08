@@ -22,5 +22,5 @@ Add the bot's application to your discord server with proper permissions.
 Copy the id of the channel the bot will write in to CHANNEL_ID in main.py
 
 ### Step 4:
-Add the desired instagram accounts to the list INSTAGRAM_ACCOUNTS in main.py
-Start the bot
+Add the desired instagram accounts to the list INSTAGRAM_ACCOUNTS in main.py.
+Start the bot.
