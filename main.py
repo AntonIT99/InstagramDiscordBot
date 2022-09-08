@@ -8,7 +8,7 @@ TOKEN = 'enter your bot token here' # enter your bot token here
 # instagram account names
 INSTAGRAM_ACCOUNTS = ['instagram', 'instagramforbusiness', 'meta']
 # channel id where the images are posted
-CHANNEL_ID = 12345678 # enter your channel id here
+CHANNEL_ID = 1234567890 # replace by your channel id
 # limit of the message history read when checking if latest instagram publications have already been posted in the channel
 MESSAGE_HISTORY_LIMIT = 100
 # color of the messages
