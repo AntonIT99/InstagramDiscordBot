@@ -11,9 +11,9 @@ pip install discord requests parse
 
 ### Step 2:
 Open a Web Browser like Mozilla Firefox. Log in to your instagram account (mandatory).
-Open the url "https://www.instagram.com/instagram/?__a=1&__d=dis" in the same Web Browser, then open developer tools with F12.
+Open the url https://www.instagram.com/instagram/?__a=1&__d=dis in the same Web Browser, then open developer tools with F12.
 Go to the network section, and do a refresh with F5. Locate the GET request to https://www.instagram.com/instagram/?__a=1&__d=dis 
-and see the request's header. Fill in the parameters of HEADER in main.py as there are displayed in your Browser, especially the Cookie.
+and see the request's header. Fill in the parameter values of HEADER in main.py as there are displayed in the request header on your Browser, especially the Cookie.
 
 ### Step 3:
 Go to the discord developer portal (https://discord.com/developers/applications),
