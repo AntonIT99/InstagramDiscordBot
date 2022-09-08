@@ -17,9 +17,9 @@ and see the request's header. Fill in the parameter values of HEADER in main.py 
 
 ### Step 3:
 Go to the discord developer portal (https://discord.com/developers/applications),
-create the application of the bot and copy the token to TOKEN in main.py
-Add the bot's application to your discord server with proper permissions
-Copy the id of the channel the bot will writes to to CHANNEL_ID in main.py
+create the application of the bot and copy the token to TOKEN in main.py.
+Add the bot's application to your discord server with proper permissions.
+Copy the id of the channel the bot will write in to CHANNEL_ID in main.py
 
 ### Step 4:
 Add the desired instagram accounts to the list INSTAGRAM_ACCOUNTS in main.py
