@@ -6,6 +6,10 @@
 ### Step 1:
 Install dependencies with pip:
 ```sh
+pip install -r requirements.txt
+```
+Or
+```sh
 pip install discord requests parse
 ```
 
