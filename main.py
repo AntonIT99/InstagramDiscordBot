@@ -323,11 +323,11 @@ def print_update_log(new: InstagramPost, old: InstagramPost):
     if new.author.full_name != old.author.full_name:
         print("[{}] {}: author.full_name {} changed to {}".format(new.author.username, new.image_code, old.author.full_name, new.author.full_name))
     if new.author.profile_pic_url != old.author.profile_pic_url:
-        print("[{}] {}: author.profile_pic_url {} changed to {}".format(new.author.username, new.image_code, old.author.profile_pic_url, new.author.profile_pic_url))
+        print("[{}] {}: author.profile_pic_url changed".format(new.author.username, new.image_code))
     if new.image_code != old.image_code:
-        print("[{}] {}: image_url {} changed to {}".format(new.author.username, new.image_code, old.image_code, new.image_code))
+        print("[{}] {}: image_code {} changed to {}".format(new.author.username, new.image_code, old.image_code, new.image_code))
     if new.image_url != old.image_url:
-        print("[{}] {}: image_url {} changed to {}".format(new.author.username, new.image_code, old.image_url, new.image_url))
+        print("[{}] {}: image_url changed".format(new.author.username, new.image_code))
     if new.description != old.description:
         print("[{}] {}: description {} changed to {}".format(new.author.username, new.image_code, old.description, new.description))
     if new.likes != old.likes:
