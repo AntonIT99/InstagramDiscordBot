@@ -266,10 +266,11 @@ def get_posts_from_instagram(user_id: str, author: Author) -> dict:
 
     fetched_images = 0
 
+    end_cursor = str(json["data"]["user"]["edge_owner_to_timeline_media"]["page_info"]["end_cursor"])
+    images_list = json["data"]["user"]["edge_owner_to_timeline_media"]["edges"]
+
     for i in range(0, images_count, step):
 
-        end_cursor = str(json["data"]["user"]["edge_owner_to_timeline_media"]["page_info"]["end_cursor"])
-        images_list = json["data"]["user"]["edge_owner_to_timeline_media"]["edges"]
         for image_data in images_list:
             image_code = str(image_data["node"]["shortcode"])
             image_url = str(image_data["node"]["display_url"])
@@ -291,6 +292,8 @@ def get_posts_from_instagram(user_id: str, author: Author) -> dict:
                     print("[{}]: fetching images {} to {}...".format(author.username, fetched_images,
                                                                      fetched_images + step - 1 if fetched_images + step - 1 < images_count else images_count - 1))
                 json = get_json_from_graphql_query(user_id, end_cursor)
+                end_cursor = str(json["data"]["user"]["edge_owner_to_timeline_media"]["page_info"]["end_cursor"])
+                images_list = json["data"]["user"]["edge_owner_to_timeline_media"]["edges"]
             except Exception:
                 traceback.print_exc()
                 print("[{}]: failed to fetching images, retrying in 5s...".format(author.username))
@@ -299,6 +302,8 @@ def get_posts_from_instagram(user_id: str, author: Author) -> dict:
                     print("[{}]: retrying to fetch images {} to {}...".format(author.username,
                                                                               fetched_images, fetched_images + step - 1 if fetched_images + step - 1 < images_count else images_count - 1))
                     json = get_json_from_graphql_query(user_id, end_cursor)
+                    end_cursor = str(json["data"]["user"]["edge_owner_to_timeline_media"]["page_info"]["end_cursor"])
+                    images_list = json["data"]["user"]["edge_owner_to_timeline_media"]["edges"]
                 except Exception:
                     traceback.print_exc()
                     if DEBUG_LOG:
