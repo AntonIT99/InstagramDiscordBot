@@ -1,7 +1,7 @@
 import functools
 import locale
 import traceback
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from time import sleep
 from typing import Optional
 
@@ -11,44 +11,9 @@ import typing
 from discord.ext import commands, tasks
 from parse import parse
 
-# Post date limit, prevent the bot to post too old images from instagram, will not affect updating of already posted images
-POST_DATE_LIMIT = date.today() - timedelta(days=60)
-# Should the bot update existing posts to get the latest number of likes and comments
-UPDATE_POSTS = True
-# Display additional logs
-DEBUG_LOG = True
-# Token of the bot
-TOKEN = 'enter your bot token here' # enter your bot token here
-# instagram account names
-INSTAGRAM_ACCOUNTS = ['instagram', 'instagramforbusiness', 'meta']
-# channel id where the images are posted
-CHANNEL_ID = 1234567890 # replace by your channel id
-# maximal number of images that should be fetched from each instagram account, set to None for no limit
-FETCHING_LIMIT = None
-# limit of the message history read when checking if latest instagram publications have already been posted in the channel, set to None for no limit
-MESSAGE_HISTORY_LIMIT = None
-# color of the messages
-COLOR = 0x05c0ec
-# time in seconds after which an update check is performed
-UPDATE_INTERVAL = 3600
-# requests timeout
-TIMEOUT = 5
-# header for sending requests to Instagram
-HEADER = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-    "Accept-Encoding": "de,en-US;q=0.7,en;q=0.3",
-    "Connection": "keep-alive",
-    "Cookie": "csrftoken=enter your cookie here", # enter your cookie from your web browser here
-    "Host": "www.instagram.com",
-    "Sec-Fetch-Dest": "document",
-    "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "cross-site",
-    "TE": "trailers",
-    "Upgrade-Insecure-Requests": "1",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:108.0) Gecko/20100101 Firefox/108.0"
-}
+import config
 
-bot = commands.Bot(command_prefix="$", intents=discord.Intents.all())
+bot = commands.Bot(command_prefix=config.COMMAND_PREFIX, intents=discord.Intents.all())
 
 
 class Author:
@@ -110,9 +75,11 @@ async def update(ctx):
     await update_from_instagram()
 
 
-@tasks.loop(seconds=UPDATE_INTERVAL)
+@tasks.loop(seconds=config.UPDATE_INTERVAL)
 async def updater():
     await update_from_instagram()
+    if config.AUTO_EXIT:
+        await bot.close()
 
 
 async def update_from_instagram():
@@ -126,7 +93,7 @@ async def update_from_instagram():
         for code in posts_from_all_authors[username]:
             if code not in messages_of_instagram_posts.keys():
                 new_images = await post_image(posts_from_all_authors[username][code], new_images)
-            elif UPDATE_POSTS:
+            elif config.UPDATE_POSTS:
                 message = messages_of_instagram_posts[code]
                 if message is not None:
                     updated_images = await update_image(message, posts_from_all_authors[username][code], updated_images)
@@ -145,12 +112,12 @@ async def run_blocking(blocking_func: typing.Callable, *args, **kwargs) -> typin
 
 
 def fetch_posts_from_instagram(posts_from_all_authors: dict):
-    for username in INSTAGRAM_ACCOUNTS:
+    for username in config.INSTAGRAM_ACCOUNTS:
         user_id, author = get_user_data(username)
         if user_id is not None and author is not None:
             posts_from_all_authors[username] = get_posts_from_instagram(user_id, author)
         else:
-            print(username + ": Failed to update: can not retrieve account data")
+            print("[{}]: Failed to update: can not retrieve account data".format(username))
 
 
 SHORTCODE_URL = "https://www.instagram.com/p/{}/"
@@ -165,7 +132,7 @@ def create_embed(post: InstagramPost) -> discord.Embed:
     embed = discord.Embed(title=TITLE_STR.format(post.author.username),
                           url=SHORTCODE_URL.format(post.image_code),
                           description=post.description,
-                          color=COLOR)
+                          color=config.COLOR)
     embed.set_author(name=post.author.full_name,
                      url=AUTHOR_URL.format(post.author.username),
                      icon_url=post.author.profile_pic_url)
@@ -177,7 +144,7 @@ def create_embed(post: InstagramPost) -> discord.Embed:
 # read all published messages in the channel
 async def read_published_messages() -> dict:
     messages = {}
-    async for message in bot.get_channel(CHANNEL_ID).history(limit=MESSAGE_HISTORY_LIMIT):
+    async for message in bot.get_channel(config.CHANNEL_ID).history(limit=config.MESSAGE_HISTORY_LIMIT):
         if message.author.id == bot.user.id:
             post = get_post_from_discord_message(message)
             if post is not None:
@@ -218,8 +185,8 @@ def get_post_from_discord_message(message: discord.Message) -> Optional[Instagra
 
 # post embedded image to discord channel
 async def post_image(post: InstagramPost, counter: int) -> int:
-    if post.post_date >= POST_DATE_LIMIT:
-        await bot.get_channel(CHANNEL_ID).send(embed=create_embed(post))
+    if post.post_date >= config.POST_DATE_LIMIT:
+        await bot.get_channel(config.CHANNEL_ID).send(embed=create_embed(post))
         return counter + 1
     return counter
 
@@ -229,7 +196,7 @@ async def update_image(message: discord.Message, new_post: InstagramPost, counte
     existing_post = get_post_from_discord_message(message)
     if new_post != existing_post:
         new_embed = create_embed(new_post)
-        if DEBUG_LOG:
+        if config.DEBUG_LOG:
             print_update_log(new_post, existing_post)
         if message.author.id == bot.user.id:
             await message.edit(embed=new_embed)
@@ -239,7 +206,7 @@ async def update_image(message: discord.Message, new_post: InstagramPost, counte
 
 # return an Author and its user id from the user data of the specified account
 def get_user_data(username: str) -> (Optional[str], Optional[Author]):
-    response = requests.get("https://www.instagram.com/{}/?__a=1&__d=dis".format(username), headers=HEADER, timeout=TIMEOUT)
+    response = requests.get("https://www.instagram.com/{}/?__a=1&__d=dis".format(username), headers=config.HEADER, timeout=config.TIMEOUT)
     try:
         user_data = response.json()["graphql"]["user"]
         return user_data["id"], Author(username, user_data["full_name"], user_data["profile_pic_url_hd"])
@@ -253,12 +220,12 @@ def get_posts_from_instagram(user_id: str, author: Author) -> dict:
     images = {}
 
     try:
-        if DEBUG_LOG:
+        if config.DEBUG_LOG:
             print("[{}]: fetching latest images...".format(author.username))
         json = get_json_from_graphql_query(user_id)
         images_count = int(json["data"]["user"]["edge_owner_to_timeline_media"]["count"])
-        if FETCHING_LIMIT is not None and images_count > FETCHING_LIMIT:
-            images_count = FETCHING_LIMIT
+        if config.FETCHING_LIMIT is not None and images_count > config.FETCHING_LIMIT:
+            images_count = config.FETCHING_LIMIT
         step = len(json["data"]["user"]["edge_owner_to_timeline_media"]["edges"])
     except Exception:
         traceback.print_exc()
@@ -288,7 +255,7 @@ def get_posts_from_instagram(user_id: str, author: Author) -> dict:
 
         if fetched_images != images_count:
             try:
-                if DEBUG_LOG:
+                if config.DEBUG_LOG:
                     print("[{}]: fetching images {} to {}...".format(author.username, fetched_images,
                                                                      fetched_images + step - 1 if fetched_images + step - 1 < images_count else images_count - 1))
                 json = get_json_from_graphql_query(user_id, end_cursor)
@@ -306,7 +273,7 @@ def get_posts_from_instagram(user_id: str, author: Author) -> dict:
                     images_list = json["data"]["user"]["edge_owner_to_timeline_media"]["edges"]
                 except Exception:
                     traceback.print_exc()
-                    if DEBUG_LOG:
+                    if config.DEBUG_LOG:
                         print("[{}]: abort the fetching process".format(author.username))
                     break
 
@@ -316,9 +283,11 @@ def get_posts_from_instagram(user_id: str, author: Author) -> dict:
 
 def get_json_from_graphql_query(user_id: str, end_cursor=""):
     if end_cursor:
-        response = requests.get("https://www.instagram.com/graphql/query/?query_id=17888483320059182&id={}&first=12&after={}".format(user_id, end_cursor), headers=HEADER, timeout=TIMEOUT)
+        response = requests.get("https://www.instagram.com/graphql/query/?query_id=17888483320059182&id={}&first=12&after={}".format(user_id, end_cursor),
+                                headers=config.HEADER, timeout=config.TIMEOUT)
     else:
-        response = requests.get("https://www.instagram.com/graphql/query/?query_id=17888483320059182&id={}&first=12".format(user_id), headers=HEADER, timeout=TIMEOUT)
+        response = requests.get("https://www.instagram.com/graphql/query/?query_id=17888483320059182&id={}&first=12".format(user_id),
+                                headers=config.HEADER, timeout=config.TIMEOUT)
     return response.json()
 
 
@@ -345,4 +314,4 @@ def print_update_log(new: InstagramPost, old: InstagramPost):
 
 if __name__ == "__main__":
     locale.setlocale(locale.LC_TIME, "de_DE")  # German locale
-    bot.run(TOKEN)
+    bot.run(config.TOKEN)
