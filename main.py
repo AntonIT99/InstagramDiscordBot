@@ -218,6 +218,7 @@ def get_user_data(username: str) -> (Optional[str], Optional[Author]):
 # return a dict of InstagramPost from the data of the latest images available from the specified Author
 def get_posts_from_instagram(user_id: str, author: Author) -> dict:
     images = {}
+    json = {}
 
     try:
         if config.DEBUG_LOG:
@@ -229,6 +230,8 @@ def get_posts_from_instagram(user_id: str, author: Author) -> dict:
         step = len(json["data"]["user"]["edge_owner_to_timeline_media"]["edges"])
     except Exception:
         traceback.print_exc()
+        if "message" in json:
+            print(json["message"])
         return images
 
     fetched_images = 0
@@ -263,6 +266,8 @@ def get_posts_from_instagram(user_id: str, author: Author) -> dict:
                 images_list = json["data"]["user"]["edge_owner_to_timeline_media"]["edges"]
             except Exception:
                 traceback.print_exc()
+                if "message" in json:
+                    print(json["message"])
                 print("[{}]: failed to fetching images, retrying in 5s...".format(author.username))
                 sleep(5)
                 try:
@@ -273,6 +278,8 @@ def get_posts_from_instagram(user_id: str, author: Author) -> dict:
                     images_list = json["data"]["user"]["edge_owner_to_timeline_media"]["edges"]
                 except Exception:
                     traceback.print_exc()
+                    if "message" in json:
+                        print(json["message"])
                     if config.DEBUG_LOG:
                         print("[{}]: abort the fetching process".format(author.username))
                     break
